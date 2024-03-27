@@ -43,5 +43,6 @@ private:
 	GLuint m_ParticleCloudVertexCount = 0;
 	float m_ParticleTime = 0.0f;
 
+	GLuint m_ParticleCloudShader = 0;
 };
 
