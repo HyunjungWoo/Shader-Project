@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Renderer.h"
+#include "Dependencies\freeglut.h"
 
 Renderer::Renderer(int windowSizeX, int windowSizeY)
 {
@@ -19,11 +20,15 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	//Load shaders
 	m_SolidRectShader = CompileShaders("./Shaders/SolidRect.vs", "./Shaders/SolidRect.fs");
-	
+	m_ParticleShader = CompileShaders("./Shaders/Particle.vs", "./Shaders/Particle.fs");
+
 	//Create VBOs
 	CreateVertexBufferObjects();
 
-	if (m_SolidRectShader > 0 && m_VBORect > 0)
+	//Create Particle Cloud
+	CreateParticleCloud(1000);
+
+	if (m_SolidRectShader > 0 && m_ParticleVBO > 0)
 	{
 		m_Initialized = true;
 	}
@@ -36,33 +41,38 @@ bool Renderer::IsInitialized()
 
 void Renderer::CreateVertexBufferObjects()
 {
-	float rect[]
+	float size = 0.05f;
+	float particleVerts[]
 		=
 	{
-		-1.f / m_WindowSizeX, -1.f / m_WindowSizeY, 0.f, -1.f / m_WindowSizeX, 1.f / m_WindowSizeY, 0.f, 1.f / m_WindowSizeX, 1.f / m_WindowSizeY, 0.f, //Triangle1
-		-1.f / m_WindowSizeX, -1.f / m_WindowSizeY, 0.f,  1.f / m_WindowSizeX, 1.f / m_WindowSizeY, 0.f, 1.f / m_WindowSizeX, -1.f / m_WindowSizeY, 0.f, //Triangle2
+		// 삼각형1
+		-size, -size, 0.f,
+		size, -size, 0.f,
+		size, size, 0.f,
+
+		// 삼각형2
+		-size, -size, 0.f,
+		size, size, 0.f,
+		-size, size, 0.f
 	};
 
-	glGenBuffers(1, &m_VBORect);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
+	glGenBuffers(1, &m_ParticleVBO);	// VBO 1개 생성, VBO의 ID를 m_ParticleVBO에 저장
+	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 
-	float vertices[] = { 
-		0.0f, 0.0f, 0.0f, 
-		1.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 0.0f };
+	// CPU 메모리에 정점 데이터를 저장
+	float vertices[]
+		=
+	{
+		0.f, 0.f, 0.f, 
+		1.f, 0.f, 0.f, 
+		1.f, 1.f, 0.f
+	};
 
-	// cpu가 관리하는 main memory에 있는 데이터를 gpu가 관리하는 memory에 복사하는 과정
-	// 1. gpu에 사용할 메모리를 할당한다.
-	// 2. gpu에 할당된 메모리에 데이터를 복사한다.
-	// 3. gpu에 복사된 데이터를 사용하여 렌더링한다.
-	// 4. gpu에 할당된 메모리를 해제한다.
-
-	glGenBuffers(1, &m_TestVBO); 
-	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO); // 작업대
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // 데이터 복사
-
-
+	// GPU 메모리에 정점 데이터를 저장
+	glGenBuffers(1, &m_TestVBO);	// VBO 생성, VBO의 ID를 m_TestVBO에 저장
+	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 }
 
 void Renderer::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
@@ -170,39 +180,9 @@ GLuint Renderer::CompileShaders(char* filenameVS, char* filenameFS)
 	}
 
 	glUseProgram(ShaderProgram);
-	std::cout << filenameVS << ", " << filenameFS << " Shader compiling is done.";
+	std::cout << filenameVS << ", " << filenameFS << " Shader compiling is done.\n";
 
 	return ShaderProgram;
-}
-
-void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a)
-{
-	float newX, newY;
-
-	GetGLPosition(x, y, &newX, &newY);
-
-	//Program select
-	glUseProgram(m_SolidRectShader);
-
-	glUniform4f(glGetUniformLocation(m_SolidRectShader, "u_Trans"), newX, newY, 0, size);
-	glUniform4f(glGetUniformLocation(m_SolidRectShader, "u_Color"), r, g, b, a);
-
-	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
-	glEnableVertexAttribArray(attribPosition);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	glDisableVertexAttribArray(attribPosition);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Renderer::GetGLPosition(float x, float y, float *newX, float *newY)
-{
-	*newX = x * 2.f / m_WindowSizeX;
-	*newY = y * 2.f / m_WindowSizeY;
 }
 
 void Renderer::DrawTest()
@@ -213,9 +193,113 @@ void Renderer::DrawTest()
 	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
 	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);	// 데이터 단위 크기 및 시작점 설정
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);	// 어떤 Primitive를 그릴지, 시작점, 그릴 개수 - draw call , async 함수 
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glDisableVertexAttribArray(attribPosition);
+}
+
+void Renderer::DrawParticle()
+{
+	GLuint shader = m_ParticleShader;
+	glUseProgram(shader);
+
+	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(timeLocation, m_ParticleTime);
+	m_ParticleTime += 0.0064;
+
+	GLint periodLocation = glGetUniformLocation(shader, "u_Period");
+	glUniform1f(periodLocation, 1.0f);
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+	glEnableVertexAttribArray(attribPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glDisableVertexAttribArray(attribPosition);
+}
+
+void Renderer::DrawParticleCloud()
+{
+	GLuint shader = m_ParticleShader;
+	glUseProgram(shader);
+
+	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(timeLocation, m_ParticleTime);
+	m_ParticleTime += 0.0064;
+
+	GLint periodLocation = glGetUniformLocation(shader, "u_Period");
+	glUniform1f(periodLocation, 1.0f);
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+	glEnableVertexAttribArray(attribPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, m_ParticleCloudVertexCount);
+
+	glDisableVertexAttribArray(attribPosition);
+}
+
+void Renderer::GetGLPosition(float x, float y, float *newX, float *newY)
+{
+	*newX = x * 2.f / m_WindowSizeX;
+	*newY = y * 2.f / m_WindowSizeY;
+}
+
+void Renderer::CreateParticleCloud(int numParticles)
+{
+	float centerX, centerY;
+	centerX = 0.f;
+	centerY = 0.f;
+
+	float size = 0.01f;
+	int particleCount = numParticles;
+	int vertexCount = particleCount * 6;
+	int floatCount = vertexCount * 3;
+
+	float* vertices = nullptr;
+	vertices = new float[floatCount];
+
+	int index = 0;
+	for (int i = 0; i < particleCount; ++i) {
+		centerX = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		centerY = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+
+		// Triangle 1
+		vertices[index++] = centerX - size;
+		vertices[index++] = centerY - size;
+		vertices[index++] = 0.f;
+
+		vertices[index++] = centerX + size;
+		vertices[index++] = centerY + size;
+		vertices[index++] = 0.f;
+
+		vertices[index++] = centerX - size;
+		vertices[index++] = centerY + size;
+		vertices[index++] = 0.f;
+		
+		// Triangle 2
+		vertices[index++] = centerX - size;
+		vertices[index++] = centerY - size;
+		vertices[index++] = 0.f;
+
+		vertices[index++] = centerX + size;
+		vertices[index++] = centerY - size;
+		vertices[index++] = 0.f;
+
+		vertices[index++] = centerX + size;
+		vertices[index++] = centerY + size;
+		vertices[index++] = 0.f;
+	}
+
+	glGenBuffers(1, &m_ParticleCloudVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * floatCount, vertices, GL_STATIC_DRAW);
+	m_ParticleCloudVertexCount = vertexCount;
+
+	delete[] vertices;
 }
