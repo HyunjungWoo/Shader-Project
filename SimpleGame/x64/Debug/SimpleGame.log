@@ -1,11 +1,11 @@
 ﻿  Renderer.cpp
-C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\실습\Shader-Project\1\SimpleGame\Renderer.cpp(92,21): warning C4267: '=': 'size_t'에서 'GLint'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\Shader-Project\SimpleGame\Renderer.cpp(92,21): warning C4267: '=': 'size_t'에서 'GLint'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   (소스 파일 '/Renderer.cpp'을(를) 컴파일하는 중)
   
-C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\실습\Shader-Project\1\SimpleGame\Renderer.cpp(212,26): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
+C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\Shader-Project\SimpleGame\Renderer.cpp(212,26): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
   (소스 파일 '/Renderer.cpp'을(를) 컴파일하는 중)
   
-C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\실습\Shader-Project\1\SimpleGame\Renderer.cpp(234,26): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
+C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\Shader-Project\SimpleGame\Renderer.cpp(235,25): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
   (소스 파일 '/Renderer.cpp'을(를) 컴파일하는 중)
   
-  SimpleGame.vcxproj -> C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\실습\Shader-Project\1\x64\Debug\SimpleGame.exe
+  SimpleGame.vcxproj -> C:\Users\hjhs0\OneDrive - 한국공학대학교\4학년1학기\셰이더\Shader-Project\x64\Debug\SimpleGame.exe
