@@ -9,15 +9,17 @@ in float a_Amp;
 in float a_Period;
 in float a_Value;
 
-uniform float u_Time = 0.f;
-uniform float u_Period = 2.f;
+uniform float u_Time	= 0.f;
+uniform float u_Period	= 2.f;
+uniform vec2  u_Acc		= vec2(0,0);
+uniform vec2  u_AttractPos = vec2(0,0);
 
-const vec3 c_StartPos = vec3(-1.0f, 0, 0);
-const vec3 c_Velocity = vec3(2.0f, 0, 0);
-const vec3 c_ParaVelocity = vec3(2.0f, 2.0f, 0);
-const vec2 c_2DGravity = vec2(0, -0.9f);
-const float c_PI = 3.14159265359f;
-const float c_Gravity = 9.8f;
+const vec3 c_StartPos		= vec3(-1.0f, 0, 0);
+const vec3 c_Velocity		= vec3(2.0f, 0, 0);
+const vec3 c_ParaVelocity	= vec3(2.0f, 2.0f, 0);
+const vec2 c_2DGravity		= vec2(0, -0.9f);
+const float c_PI			= 3.14159265359f;
+const float c_Gravity		= 9.8f;
 
 void Basic()
 {
@@ -33,8 +35,11 @@ void Velocity()
 	if( t> 0)
 	{
 		t =  a_LifeTime* fract(t / a_LifeTime);
-	    newPosition.xy = newPosition.xy + a_Velocity.xy * t;
-
+		float attractValue =  fract(t / a_LifeTime);
+		float tt = t*t;
+		vec2 trans = a_Velocity.xy * t + 0.5*(c_2DGravity + u_Acc)*tt;
+	    newPosition.xy = newPosition.xy + a_Velocity.xy * t + 0.5*(c_2DGravity + u_Acc)*tt;
+		newPosition.xy = mix(newPosition.xy, u_AttractPos,attractValue);
 	}
 	else
 	{
@@ -81,7 +86,7 @@ void Parabola()
 	gl_Position = newPosition;
 }
 
-void SinShape() // 로켓부스터처럼 사용
+void CircleShape() // 로켓부스터처럼 사용
 {
 	vec4 newPosition = vec4(a_Position,1);
 	float t = u_Time - a_StartTime;
@@ -112,6 +117,70 @@ void SinShape() // 로켓부스터처럼 사용
 	gl_Position = newPosition;
 }
 
+void CircleShapeCycle() //  원이 순차적으로 사용
+{
+	vec4 newPosition = vec4(a_Position,1);
+	float t = u_Time - a_StartTime;
+	float amp = a_Amp; // 폭
+	float period = a_Period; // 주기 
+
+	if( t > 0)
+	{
+		t =  a_LifeTime* fract(t / a_LifeTime);
+		float tt = t*t;
+		float value = a_StartTime * 2.0 * c_PI;
+		float x = cos(value);
+		float y = sin(value);
+		newPosition.xy = newPosition.xy + vec2(x,y);
+
+		vec2 newVel = a_Velocity.xy + c_2DGravity * t;
+		vec2 newDir = vec2(-newVel.y, newVel.x);
+		newDir = normalize(newDir);
+	    newPosition.xy = newPosition.xy + a_Velocity.xy * t + 0.5* c_2DGravity * tt;
+		newPosition.xy = newPosition.xy + newDir*(t*0.1)*amp*sin(period*t*c_PI);
+
+	}
+	else
+	{
+	     newPosition.x = 10000000;
+	}
+
+	gl_Position = newPosition;
+}
+
+void HeartShapeCycle() //  하트모양사이클
+{
+	vec4 newPosition = vec4(a_Position,1);
+	float t = u_Time - a_StartTime;
+	float amp = a_Amp; // 폭
+	float period = a_Period; // 주기 
+
+	if( t > 0)
+	{
+		t =  a_LifeTime* fract(t / a_LifeTime);
+		float tt = t*t;
+		float value = a_StartTime * 2.0 * c_PI;
+		float x = 16* pow(sin(value),3);
+		float y = 13*cos(value) - 5*cos(2*value) - 2*cos(3*value) - cos(4*value);
+		x*= 0.05;
+		y*= 0.05;
+		newPosition.xy = newPosition.xy + vec2(x,y);
+
+		vec2 newVel = a_Velocity.xy + c_2DGravity * t;
+		vec2 newDir = vec2(-newVel.y, newVel.x);
+		newDir = normalize(newDir);
+	    newPosition.xy = newPosition.xy + a_Velocity.xy * t + 0.5 * c_2DGravity * tt;
+		newPosition.xy = newPosition.xy + newDir*(t*0.1)*amp*sin(t*c_PI*period);
+
+	}
+	else
+	{
+	     newPosition.x = 10000000;
+	}
+
+	gl_Position = newPosition;
+}
+
 
 void main()
 {
@@ -120,6 +189,8 @@ void main()
 	//Parabola();
 	//Triangle();	// 시험에 낼 것임 직접 만들어 볼 것
 	//Basic();
-	//Velocity();
-	SinShape();
+	Velocity();
+	//CircleShape();
+	//CircleShapeCycle();
+	HeartShapeCycle();
 }
