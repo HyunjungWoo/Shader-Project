@@ -8,6 +8,9 @@ in float a_LifeTime;
 in float a_Amp;
 in float a_Period;
 in float a_Value;
+in vec4  a_Color;
+
+out vec4 v_Color;
 
 uniform float u_Time	= 0.f;
 uniform float u_Period	= 2.f;
@@ -25,6 +28,8 @@ void Basic()
 {
 	vec4 newPosition = vec4(a_Position, 1.f);
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void Velocity()
@@ -47,6 +52,8 @@ void Velocity()
 	}
 
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 
@@ -57,6 +64,8 @@ void Line()
 	newPosition.xyz = (c_StartPos + a_Position) + c_Velocity * newTime;
 	newPosition.w = 1.f;
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void Circle()
@@ -67,6 +76,8 @@ void Circle()
 	newPosition.xy = a_Position.xy + trans;
 	newPosition.zw = vec2(0, 1);
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void Parabola()
@@ -84,6 +95,8 @@ void Parabola()
 	newPosition.xy = vec2(transX, transY);
 	newPosition.zw = vec2(0, 1);
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void CircleShape() // 로켓부스터처럼 사용
@@ -115,6 +128,8 @@ void CircleShape() // 로켓부스터처럼 사용
 	}
 
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void CircleShapeCycle() //  원이 순차적으로 사용
@@ -146,6 +161,8 @@ void CircleShapeCycle() //  원이 순차적으로 사용
 	}
 
 	gl_Position = newPosition;
+	v_Color = a_Color;
+
 }
 
 void HeartShapeCycle() //  하트모양사이클
@@ -158,6 +175,7 @@ void HeartShapeCycle() //  하트모양사이클
 	if( t > 0)
 	{
 		t =  a_LifeTime* fract(t / a_LifeTime);
+		float particleAlpha = 1 - t/a_LifeTime;
 		float tt = t*t;
 		float value = a_StartTime * 2.0 * c_PI;
 		float x = 16* pow(sin(value),3);
@@ -171,14 +189,18 @@ void HeartShapeCycle() //  하트모양사이클
 		newDir = normalize(newDir);
 	    newPosition.xy = newPosition.xy + a_Velocity.xy * t + 0.5 * c_2DGravity * tt;
 		newPosition.xy = newPosition.xy + newDir*(t*0.1)*amp*sin(t*c_PI*period);
+		v_Color = vec4(a_Color.rgb, particleAlpha);
 
 	}
 	else
 	{
-	     newPosition.x = 10000000;
+	    newPosition.x = 10000000;
+		v_Color = a_Color;
+
 	}
 
 	gl_Position = newPosition;
+
 }
 
 
@@ -189,8 +211,11 @@ void main()
 	//Parabola();
 	//Triangle();	// 시험에 낼 것임 직접 만들어 볼 것
 	//Basic();
-	Velocity();
+	//Velocity();
 	//CircleShape();
 	//CircleShapeCycle();
 	HeartShapeCycle();
+
+	v_Color = a_Color;
+		
 }
