@@ -11,6 +11,4 @@ C:\Users\hjhs0\OneDrive\문서\4학년1학기\셰이더\Shader-Project\SimpleGam
 C:\Users\hjhs0\OneDrive\문서\4학년1학기\셰이더\Shader-Project\SimpleGame\Renderer.cpp(329,26): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
   (소스 파일 '/Renderer.cpp'을(를) 컴파일하는 중)
   
-  SimpleGame.cpp
-  코드를 생성하고 있습니다...
   SimpleGame.vcxproj -> C:\Users\hjhs0\OneDrive\문서\4학년1학기\셰이더\Shader-Project\x64\Debug\SimpleGame.exe

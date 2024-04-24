@@ -501,3 +501,5 @@ void Renderer::CreateParticleCloud(int numParticles)
 
 	delete[] vertices;
 }
+
+
