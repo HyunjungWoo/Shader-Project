@@ -147,7 +147,7 @@ void Renderer::CreateVertexBufferObjects()
 
 	glGenBuffers(1, &m_ParticleVBO);	// VBO 1개 생성, VBO의 ID를 m_ParticleVBO에 저장
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU) 인자는 데이터의 크기, 데이터의 주소, 데이터의 사용 방법
 
 	// CPU 메모리에 정점 데이터를 저장
 	float vertices[]
@@ -300,10 +300,10 @@ void Renderer::DrawTest()
 	//Program select
 	glUseProgram(m_SolidRectShader);
 
-	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
-	glEnableVertexAttribArray(attribPosition);
-	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position"); // attribute 변수의 위치를 가져옴
+	glEnableVertexAttribArray(attribPosition); // attribute 변수를 사용하겠다고 알림
+	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO); // VBO를 바인딩
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); // attribute 변수, 데이터의 형식, 데이터의 구성, 데이터의 시작 위치,0;
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -336,8 +336,10 @@ void Renderer::DrawParticleCloud()
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	GLuint shader = m_ParticleCloudShader;
 	glUseProgram(shader);
+
 	GLuint stride = sizeof(float) * 15;
 
 	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
@@ -348,7 +350,7 @@ void Renderer::DrawParticleCloud()
 	glUniform1f(ulPeriod, 2.0);
 
 	GLint ulAcc = glGetUniformLocation(shader, "u_Acc");
-	glUniform2f(ulAcc, cos(m_ParticleTime/10), sin(m_ParticleTime/10));
+	glUniform2f(ulAcc, cos(m_ParticleTime/10), sin(m_ParticleTime/10)); 
 
 	
 

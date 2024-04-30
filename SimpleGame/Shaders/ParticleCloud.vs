@@ -12,10 +12,10 @@ in vec4  a_Color;
 
 out vec4 v_Color;
 
-uniform float u_Time	= 0.f;
-uniform float u_Period	= 2.f;
-uniform vec2  u_Acc		= vec2(0,0);
-uniform vec2  u_AttractPos = vec2(0,0);
+uniform float u_Time	= 0.f; // 시간
+uniform float u_Period	= 2.f; // 주기
+uniform vec2  u_Acc		= vec2(0,0); // 가속도
+uniform vec2  u_AttractPos = vec2(0,0); // 끌어당기는 위치
 
 const vec3 c_StartPos		= vec3(-1.0f, 0, 0);
 const vec3 c_Velocity		= vec3(2.0f, 0, 0);
@@ -211,10 +211,10 @@ void main()
 	//Parabola();
 	//Triangle();	// 시험에 낼 것임 직접 만들어 볼 것
 	//Basic();
-	//Velocity();
+	Velocity();
 	//CircleShape();
 	//CircleShapeCycle();
-	HeartShapeCycle();
+	//HeartShapeCycle();
 
 	v_Color = a_Color;
 		
