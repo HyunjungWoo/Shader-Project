@@ -65,10 +65,11 @@ void SinGraph()
 	width = width * (1-v_Color.r);
 	if( sinValue < newTexPos.y + width && sinValue > newTexPos.y - width  )
 	{
-		FragColor = vec4((sinValue + 1)/2 - 0.2);
+		FragColor = vec4((sinValue + 1)/2);
 	}
 	else{
-	FragColor = vec4(0);
+		discard;
+	//FragColor = vec4(0);
 	}
 }
 void main()

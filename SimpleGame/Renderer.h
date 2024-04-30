@@ -18,7 +18,7 @@ public:
 	void DrawParticle();
 	void DrawParticleCloud();
 	void DrawFSSandbox();
-
+	void DrawGridMesh();
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -28,6 +28,7 @@ private:
 	void GetGLPosition(float x, float y, float *newX, float *newY);
 
 	void CreateParticleCloud(int numParticles);
+	void CreateGridMesh(int x, int y);
 
 	bool m_Initialized = false;
 	
@@ -55,5 +56,9 @@ private:
 	GLuint m_FSSandboxVBO = 0;
 	float  m_FSSandboxTime = 0;
 
+	GLuint m_GridMeshShader = 0;
+	GLuint m_GridMeshVBO = 0;
+	GLuint m_GridMeshVertexCount = 0;
+	float m_GridMeshTime = 0;
 };
 
