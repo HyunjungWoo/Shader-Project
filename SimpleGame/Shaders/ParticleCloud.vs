@@ -211,8 +211,8 @@ void main()
 	//Parabola();
 	//Triangle();	// 시험에 낼 것임 직접 만들어 볼 것
 	//Basic();
-	Velocity();
-	//CircleShape();
+	//Velocity();
+	CircleShape();
 	//CircleShapeCycle();
 	//HeartShapeCycle();
 
