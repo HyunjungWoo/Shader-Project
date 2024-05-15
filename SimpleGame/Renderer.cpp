@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Renderer.h"
 #include "Dependencies\freeglut.h"
+#include "LoadPng.h"
 
 Renderer::Renderer(int windowSizeX, int windowSizeY)
 {
@@ -24,18 +25,29 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_ParticleCloudShader = CompileShaders("./Shaders/ParticleCloud.vs", "./Shaders/ParticleCloud.fs");
 	m_FSSandboxShader = CompileShaders("./Shaders/FSSandbox.vs", "./Shaders/FSSandbox.fs");
 	m_GridMeshShader = CompileShaders("./Shaders/GridMesh.vs", "./Shaders/GridMesh.fs");
-
-
+	m_TextureSandboxShader = CompileShaders("./Shaders/TextureSandbox.vs", "./Shaders/TextureSandbox.fs");
 
 	//Create VBOs
 	CreateVertexBufferObjects();
 
 	//Create Particle Cloud
-	CreateParticleCloud(10000);
+	CreateParticleCloud(30000);
 
 	//Create Grid Mesh
-	CreateGridMesh(32,32);
+	CreateGridMesh(32, 32);
 
+	m_RGBTexture = CreatePngTexture("rgb.png", GL_NEAREST);
+	m_NumberTexture[0] = CreatePngTexture("./textures/0.png", GL_NEAREST);
+	m_NumberTexture[1] = CreatePngTexture("./textures/1.png", GL_NEAREST);
+	m_NumberTexture[2] = CreatePngTexture("./textures/2.png", GL_NEAREST);
+	m_NumberTexture[3] = CreatePngTexture("./textures/3.png", GL_NEAREST);
+	m_NumberTexture[4] = CreatePngTexture("./textures/4.png", GL_NEAREST);
+	m_NumberTexture[5] = CreatePngTexture("./textures/5.png", GL_NEAREST);
+	m_NumberTexture[6] = CreatePngTexture("./textures/6.png", GL_NEAREST);
+	m_NumberTexture[7] = CreatePngTexture("./textures/7.png", GL_NEAREST);
+	m_NumberTexture[8] = CreatePngTexture("./textures/8.png", GL_NEAREST);
+	m_NumberTexture[9] = CreatePngTexture("./textures/9.png", GL_NEAREST);
+	m_numbersTexture = CreatePngTexture("./textures/numbers.png", GL_NEAREST);
 
 	if (m_SolidRectShader > 0 && m_ParticleVBO > 0)
 	{
@@ -46,86 +58,6 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 bool Renderer::IsInitialized()
 {
 	return m_Initialized;
-}
-
-void Renderer::CreateGridMesh(int x,int y)
-{
-	float basePosX = -0.5f;
-	float basePosY = -0.5f;
-	float targetPosX = 0.5f;
-	float targetPosY = 0.5f;
-
-	int pointCountX = x;
-	int pointCountY = y;
-
-	float width = targetPosX - basePosX;
-	float height = targetPosY - basePosY;
-
-	float* point = new float[pointCountX * pointCountY * 2];
-	float* vertices = new float[(pointCountX - 1) * (pointCountY - 1) * 2 * 3 * 3];
-	m_GridMeshVertexCount = (pointCountX - 1) * (pointCountY - 1) * 2 * 3;
-
-	//Prepare points
-	for (int x = 0; x < pointCountX; x++)
-	{
-		for (int y = 0; y < pointCountY; y++)
-		{
-			point[(y * pointCountX + x) * 2 + 0] = basePosX + width * (x / (float)(pointCountX - 1));
-			point[(y * pointCountX + x) * 2 + 1] = basePosY + height * (y / (float)(pointCountY - 1));
-		}
-	}
-
-	//Make triangles
-	int vertIndex = 0;
-	for (int x = 0; x < pointCountX - 1; x++)
-	{
-		for (int y = 0; y < pointCountY - 1; y++)
-		{
-			//Triangle part 1
-			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + x) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + x) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-
-			//Triangle part 2
-			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-			vertices[vertIndex] = point[(y * pointCountX + (x + 1)) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[(y * pointCountX + (x + 1)) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 0];
-			vertIndex++;
-			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 1];
-			vertIndex++;
-			vertices[vertIndex] = 0.f;
-			vertIndex++;
-		}
-	}
-
-	glGenBuffers(1, &m_GridMeshVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_GridMeshVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (pointCountX - 1) * (pointCountY - 1) * 2 * 3 * 3, vertices, GL_STATIC_DRAW);
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -147,7 +79,7 @@ void Renderer::CreateVertexBufferObjects()
 
 	glGenBuffers(1, &m_ParticleVBO);	// VBO 1개 생성, VBO의 ID를 m_ParticleVBO에 저장
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU) 인자는 데이터의 크기, 데이터의 주소, 데이터의 사용 방법
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 
 	// CPU 메모리에 정점 데이터를 저장
 	float vertices[]
@@ -163,13 +95,12 @@ void Renderer::CreateVertexBufferObjects()
 	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 
-	 size = 0.5f;
-	float FSSandboxVerts[]
+	size = 0.5f;
+	float FSsandboxVerts[]
 		=
 	{
 		// 삼각형1
 		-size, -size, 0.f,
-
 		size, -size, 0.f,
 		size, size, 0.f,
 
@@ -181,8 +112,26 @@ void Renderer::CreateVertexBufferObjects()
 
 	glGenBuffers(1, &m_FSSandboxVBO);	// VBO 1개 생성, VBO의 ID를 m_ParticleVBO에 저장
 	glBindBuffer(GL_ARRAY_BUFFER, m_FSSandboxVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(FSSandboxVerts), FSSandboxVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(FSsandboxVerts), FSsandboxVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 
+	size = 0.5f;
+	float TextureVerts[]
+		=
+	{
+		// 삼각형1
+		-size, -size, 0.f, 0, 1,
+		size,  -size, 0.f, 1, 1,
+		size,   size, 0.f, 1, 0,
+
+		-size, -size, 0.f, 0, 1,
+		size,   size, 0.f, 1, 0,
+		-size,  size, 0.f, 0, 0
+	};
+
+
+	glGenBuffers(1, &m_TextureSandboxVBO);	// VBO 1개 생성, VBO의 ID를 m_ParticleVBO에 저장
+	glBindBuffer(GL_ARRAY_BUFFER, m_TextureSandboxVBO);	// VBO를 바인딩(이 데이터는 array 형식이다 라고 알려줌)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVerts), TextureVerts, GL_STATIC_DRAW);	// Bind된 VBO에 데이터를 복사(GPU)
 }
 
 void Renderer::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
@@ -300,10 +249,10 @@ void Renderer::DrawTest()
 	//Program select
 	glUseProgram(m_SolidRectShader);
 
-	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position"); // attribute 변수의 위치를 가져옴
-	glEnableVertexAttribArray(attribPosition); // attribute 변수를 사용하겠다고 알림
-	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO); // VBO를 바인딩
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); // attribute 변수, 데이터의 형식, 데이터의 구성, 데이터의 시작 위치,0;
+	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
+	glEnableVertexAttribArray(attribPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, m_TestVBO);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -334,25 +283,22 @@ void Renderer::DrawParticle()
 
 void Renderer::DrawParticleCloud()
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+	glEnable(GL_BLEND);	// 블렌딩 활성화
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	// 블렌딩 함수 설정 뒤에 있는 물체의 알파값을 사용, 소스의 알파값을 1에서 뺀 값으로 계산
+
 	GLuint shader = m_ParticleCloudShader;
 	glUseProgram(shader);
-
 	GLuint stride = sizeof(float) * 15;
 
 	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
 	glUniform1f(timeLocation, m_ParticleTime);
 	m_ParticleTime += 0.016;
 
-	GLint ulPeriod = glGetUniformLocation(shader, "u_Period");
-	glUniform1f(ulPeriod, 2.0);
+	GLint periodLocation = glGetUniformLocation(shader, "u_Period");
+	glUniform1f(periodLocation, 1.0f);
 
-	GLint ulAcc = glGetUniformLocation(shader, "u_Acc");
-	glUniform2f(ulAcc, cos(m_ParticleTime/10), sin(m_ParticleTime/10)); 
-
-	
+	GLint accLocation = glGetUniformLocation(shader, "u_Acc");
+	glUniform2f(accLocation, cos(m_ParticleTime / 10.f), sin(m_ParticleTime / 10.f));
 
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
@@ -369,16 +315,15 @@ void Renderer::DrawParticleCloud()
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
 	glVertexAttribPointer(attribStartTime, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 6));
 
-
 	int attribLifeTime = glGetAttribLocation(shader, "a_LifeTime");
 	glEnableVertexAttribArray(attribLifeTime);
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
 	glVertexAttribPointer(attribLifeTime, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 7));
 
-	int attribAmp = glGetAttribLocation(shader, "a_Amp");
-	glEnableVertexAttribArray(attribAmp);
+	int attribAmplitude = glGetAttribLocation(shader, "a_Amplitude");
+	glEnableVertexAttribArray(attribAmplitude);
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
-	glVertexAttribPointer(attribAmp, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 8));
+	glVertexAttribPointer(attribAmplitude, 1, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 8));
 
 	int attribPeriod = glGetAttribLocation(shader, "a_Period");
 	glEnableVertexAttribArray(attribPeriod);
@@ -394,61 +339,109 @@ void Renderer::DrawParticleCloud()
 	glEnableVertexAttribArray(attribColor);
 	glBindBuffer(GL_ARRAY_BUFFER, m_ParticleCloudVBO);
 	glVertexAttribPointer(attribColor, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float) * 11));
-	
+
 	glDrawArrays(GL_TRIANGLES, 0, m_ParticleCloudVertexCount);
 
 	glDisableVertexAttribArray(attribPosition);
 
-	glDisable(GL_BLEND);
+	glDisable(GL_BLEND);	// 블렌딩 비활성화
 }
 
 void Renderer::DrawFSSandbox()
 {
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+	//glEnable(GL_BLEND);	// 블렌딩 활성화
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	// 블렌딩 함수 설정 뒤에 있는 물체의 알파값을 사용, 소스의 알파값을 1에서 뺀 값으로 계산
+
 	GLuint shader = m_FSSandboxShader;
 	glUseProgram(shader);
 	GLuint stride = sizeof(float) * 3;
 
 	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
 	glUniform1f(timeLocation, m_FSSandboxTime);
-	m_FSSandboxTime += 0.016; // 정확하진않다
+	m_FSSandboxTime += 0.016;
 
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
 	glBindBuffer(GL_ARRAY_BUFFER, m_FSSandboxVBO);
 	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, stride, 0);
 
-	
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glDisableVertexAttribArray(attribPosition);
-
-	glDisable(GL_BLEND);
+	//glDisable(GL_BLEND);	// 블렌딩 비활성화
 }
 
 void Renderer::DrawGridMesh()
 {
-	//Program select
 	GLuint shader = m_GridMeshShader;
 	glUseProgram(shader);
+	GLuint stride = sizeof(float) * 3;
+
+	GLint timeLocation = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(timeLocation, m_GridMeshTime);
+	m_GridMeshTime += 0.016;
 
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
 	glBindBuffer(GL_ARRAY_BUFFER, m_GridMeshVBO);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, stride, 0);
 
-	GLuint ul_Time = glGetUniformLocation(shader, "u_Time");
-	glUniform1f(ul_Time, m_GridMeshTime);
-	m_GridMeshTime += 0.016;
 	glDrawArrays(GL_LINE_STRIP, 0, m_GridMeshVertexCount);
 
 	glDisableVertexAttribArray(attribPosition);
 }
 
+void Renderer::DrawTextureSandbox()
+{
+
+	GLuint shader = m_TextureSandboxShader;
+	//Program select
+	glUseProgram(shader);
+	float stride = sizeof(float) * 5;
+	//glViewport(0, 0, 256, 256);
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+	glEnableVertexAttribArray(attribPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, m_TextureSandboxVBO);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, stride, 0);
 
 
+	int attribUv = glGetAttribLocation(shader, "a_Texture");
+	glEnableVertexAttribArray(attribUv);
+	glBindBuffer(GL_ARRAY_BUFFER, m_TextureSandboxVBO);
+	glVertexAttribPointer(attribUv, 2, GL_FLOAT, GL_FALSE, stride, (GLuint*)(sizeof(float) * 3));
+
+
+	int uniformTex = glGetUniformLocation(shader, "uTexSampler");
+	glUniform1i(uniformTex, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_RGBTexture);
+
+	int usampler1 = glGetUniformLocation(shader, "u_NumberTexture");
+	int textures[] = { 1,2,3,4,5,6,7,8,9,10 };
+	glUniform1iv(usampler1, 10, textures);
+
+
+	int usampler2 = glGetUniformLocation(shader, "u_NumbersTexture");
+	glUniform1i(usampler2, 11);
+
+
+
+	for (int i = 0; i < 10; i++) {
+		glActiveTexture(GL_TEXTURE1 + i);
+		glBindTexture(GL_TEXTURE_2D, m_NumberTexture[i]);
+	}
+	glActiveTexture(GL_TEXTURE11);
+	glBindTexture(GL_TEXTURE_2D, m_numbersTexture);
+
+	GLuint ul_Time = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(ul_Time, m_TextureSandboxTime);
+	m_TextureSandboxTime += 0.016;
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glDisableVertexAttribArray(attribPosition);
+}
 
 void Renderer::GetGLPosition(float x, float y, float *newX, float *newY)
 {
@@ -465,42 +458,43 @@ void Renderer::CreateParticleCloud(int numParticles)
 	float size = 0.005f;
 	int particleCount = numParticles;
 	int vertexCount = particleCount * 6;
-	int floatCount = vertexCount * (3 + 3 + 1 + 1 + 1 + 1 + 1 + 4); 
-	// x, y, z, vx, vy, vz, startTime, amp, period, value, r,g,b,a
+	int floatCount = vertexCount * (3 + 3 + 1 + 1 + 1 + 1 + 1 + 4); // (x, y, z), (vx, vy, vz), startTime, lifeTime, amplitude, period, value, (r, g, b, a)
+
 	float* vertices = nullptr;
 	vertices = new float[floatCount];
 
 	float vx, vy, vz;
 	float startTime;
 	float lifeTime;
-	float amp, period;
+	float amplitude, period;
 	float value;
 	float r, g, b, a;
 
 	int index = 0;
-	for (int i = 0; i < particleCount; ++i) 
-	{
+	for (int i = 0; i < particleCount; ++i) {
 		float velocityScale = 0.2f;
-		centerX = 0.f;
-		centerY = 0.f;	// center x,y = 0.f 분수처럼 표현 가능
+
 		/*centerX = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 		centerY = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;*/
-		vx = 0.f; //(((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * velocityScale;
-		vy = -0.1f; //(((float)rand() / (float)RAND_MAX) * 2.f - 1.f)* velocityScale;// 항상 양수가 되도록 더해줌
-		vz = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * velocityScale;
-		/*vx = 1.f;
-		vy = 0.5f; 
-		vz = 0.f;*/
-		startTime	= 10.f * ((float)rand() / (float)RAND_MAX);
-		lifeTime	= 1.f * ((float)rand() / (float)RAND_MAX) + 1.f;
+		centerX = 0.f;
+		centerY = 0.f;
 
-		amp		= (((float)rand() / (float)RAND_MAX) - 0.5f) *2.f ;
+		//vx = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * velocityScale;
+		vx = 0.f;
+		vy = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * velocityScale - 0.5f;
+		vz = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * velocityScale;
+
+		startTime = 10.f * ((float)rand() / (float)RAND_MAX);
+		lifeTime = 0.2f * ((float)rand() / (float)RAND_MAX) + 1.f;
+
+		amplitude = (((float)rand() / (float)RAND_MAX) - 0.5f) * 2.f;
 		period	= ((float)rand() / (float)RAND_MAX);
-		value	= ((float)rand() / (float)RAND_MAX);
-		r		= ((float)rand() / (float)RAND_MAX);
-		g		= ((float)rand() / (float)RAND_MAX);
-		b		= ((float)rand() / (float)RAND_MAX);
-		a		= ((float)rand() / (float)RAND_MAX);
+		value = ((float)rand() / (float)RAND_MAX);
+
+		r = ((float)rand() / (float)RAND_MAX);
+		g = ((float)rand() / (float)RAND_MAX);
+		b = ((float)rand() / (float)RAND_MAX);
+		a = 1.f;
 
 		// Triangle 1
 		vertices[index++] = centerX - size;
@@ -511,14 +505,13 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
-		vertices[index++] = r; 
-		vertices[index++] = g; 
-		vertices[index++] = b; 
+		vertices[index++] = r;
+		vertices[index++] = g;
+		vertices[index++] = b;
 		vertices[index++] = a;
-
 
 		vertices[index++] = centerX + size;
 		vertices[index++] = centerY + size;
@@ -528,7 +521,7 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
 		vertices[index++] = r;
@@ -544,7 +537,7 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
 		vertices[index++] = r;
@@ -561,7 +554,7 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
 		vertices[index++] = r;
@@ -577,7 +570,7 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
 		vertices[index++] = r;
@@ -593,14 +586,13 @@ void Renderer::CreateParticleCloud(int numParticles)
 		vertices[index++] = vz;
 		vertices[index++] = startTime;
 		vertices[index++] = lifeTime;
-		vertices[index++] = amp;
+		vertices[index++] = amplitude;
 		vertices[index++] = period;
 		vertices[index++] = value;
 		vertices[index++] = r;
 		vertices[index++] = g;
 		vertices[index++] = b;
 		vertices[index++] = a;
-
 	}
 
 	glGenBuffers(1, &m_ParticleCloudVBO);
@@ -611,4 +603,105 @@ void Renderer::CreateParticleCloud(int numParticles)
 	delete[] vertices;
 }
 
+void Renderer::CreateGridMesh(int xCount, int yCount)
+{
+	float basePosX = -0.5f;
+	float basePosY = -0.5f;
+	float targetPosX = 0.5f;
+	float targetPosY = 0.5f;
 
+	int pointCountX = xCount;
+	int pointCountY = yCount;
+
+	float width = targetPosX - basePosX;
+	float height = targetPosY - basePosY;
+
+	float* point = new float[pointCountX * pointCountY * 2];
+	float* vertices = new float[(pointCountX - 1) * (pointCountY - 1) * 2 * 3 * 3];
+	m_GridMeshVertexCount = (pointCountX - 1) * (pointCountY - 1) * 2 * 3;
+
+	//Prepare points
+	for (int x = 0; x < pointCountX; x++)
+	{
+		for (int y = 0; y < pointCountY; y++)
+		{
+			point[(y * pointCountX + x) * 2 + 0] = basePosX + width * (x / (float)(pointCountX - 1));
+			point[(y * pointCountX + x) * 2 + 1] = basePosY + height * (y / (float)(pointCountY - 1));
+		}
+	}
+
+	//Make triangles
+	int vertIndex = 0;
+	for (int x = 0; x < pointCountX - 1; x++)
+	{
+		for (int y = 0; y < pointCountY - 1; y++)
+		{
+			//Triangle part 1
+			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+
+			//Triangle part 2
+			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y * pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[(y * pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y * pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1) * pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+		}
+	}
+
+	glGenBuffers(1, &m_GridMeshVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_GridMeshVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (pointCountX - 1) * (pointCountY - 1) * 2 * 3 * 3, vertices, GL_STATIC_DRAW);
+
+}
+GLuint Renderer::CreatePngTexture(char* filePath, GLuint samplingMethod)
+{
+		//Load Png
+		std::vector<unsigned char> image;
+		unsigned width, height;
+		unsigned error = lodepng::decode(image, width, height, filePath);
+		if (error != 0)
+		{
+			std::cout << "PNG image loading failed:" << filePath << std::endl;
+		}
+
+		GLuint temp;
+		glGenTextures(1, &temp);
+		glBindTexture(GL_TEXTURE_2D, temp);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+			GL_UNSIGNED_BYTE, &image[0]);
+
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplingMethod);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplingMethod);
+
+		return temp;
+}

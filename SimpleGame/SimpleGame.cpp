@@ -42,13 +42,16 @@ void RenderSceneTimer(int value)
 	//g_Renderer->DrawParticleCloud();
 	//g_Renderer->DrawFSSandbox();
 	//g_Renderer->DrawGridMesh();
+	g_Renderer->DrawTextureSandbox();
 
 	glutSwapBuffers();
-	glutTimerFunc(16, RenderSceneTimer,1);
+
+	glutTimerFunc(16, RenderSceneTimer, 0);
 }
+
 void Idle(void)
 {
-	RenderScene();
+	//RenderScene();
 }
 
 void MouseInput(int button, int state, int x, int y)
@@ -98,7 +101,6 @@ int main(int argc, char **argv)
 	glutMouseFunc(MouseInput);
 	glutSpecialFunc(SpecialKeyInput);
 	glutTimerFunc(16, RenderSceneTimer, 1);
-
 
 	glutMainLoop();
 
